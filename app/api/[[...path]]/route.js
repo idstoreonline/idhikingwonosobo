@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = process.env.DB_NAME || 'id_hiking_rent';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 let cachedClient = null;
 async function getDb() {
@@ -25,6 +26,9 @@ const IMG = {
   compass2: 'https://images.unsplash.com/photo-1700659145327-65692f7a6e71?w=800&q=80',
   compass3: 'https://images.unsplash.com/photo-1598944999410-e93772fc48a5?w=800&q=80',
   flash: 'https://images.unsplash.com/photo-1602223876473-c37ee6c2a4e2?w=800&q=80',
+  mountain1: 'https://images.unsplash.com/photo-1611366376326-5eaf36b54355?w=800&q=80',
+  mountain2: 'https://images.unsplash.com/photo-1654362248566-6804dbcc5bdc?w=800&q=80',
+  mountain3: 'https://images.unsplash.com/photo-1519614218660-ea0a24a43b4c?w=800&q=80',
 };
 
 const SEED_PRODUCTS = [
@@ -86,30 +90,88 @@ const SEED_FAQS = [
   { q: 'Bisa cancel booking?', a: 'Bisa cancel gratis H-2 sebelum tanggal sewa. Setelah itu DP tidak dapat dikembalikan namun bisa reschedule.' },
 ];
 
+const SEED_GALLERY = [
+  { url: IMG.mountain1, caption: 'Sunrise Gunung Prau', category: 'Summit' },
+  { url: IMG.mountain2, caption: 'Golden Hour di Sindoro', category: 'Summit' },
+  { url: IMG.mountain3, caption: 'Camping Bersama di Dieng', category: 'Camping' },
+  { url: IMG.tent1, caption: 'Setup Tenda Premium', category: 'Alat' },
+  { url: IMG.tent2, caption: 'Tenda Ultralight 2P', category: 'Alat' },
+  { url: IMG.bp1, caption: 'Carrier Consina 60L', category: 'Alat' },
+  { url: IMG.bp2, caption: 'Sleeping Bag Bersih', category: 'Alat' },
+  { url: IMG.boot1, caption: 'Sepatu Trekking', category: 'Alat' },
+  { url: IMG.compass1, caption: 'Perlengkapan Navigasi', category: 'Alat' },
+];
+
 async function ensureSeeded(db) {
   const count = await db.collection('products').countDocuments();
-  if (count > 0) return;
-  await db.collection('products').insertMany(SEED_PRODUCTS.map(p => ({ id: uuidv4(), status: 'READY', createdAt: new Date(), ...p })));
-  await db.collection('promos').insertMany(SEED_PROMOS.map(p => ({ id: uuidv4(), active: true, ...p })));
-  await db.collection('reviews').insertMany(SEED_REVIEWS.map(r => ({ id: uuidv4(), createdAt: new Date(), ...r })));
-  await db.collection('packages').insertMany(SEED_PACKAGES.map(p => ({ id: uuidv4(), ...p })));
-  await db.collection('faqs').insertMany(SEED_FAQS.map(f => ({ id: uuidv4(), ...f })));
-  await db.collection('settings').insertOne({
-    id: 'main',
-    whatsapp: '6287777728727',
-    address: 'Jl. Dieng KM 3, Wonosobo, Jawa Tengah 56311',
-    hours: 'Setiap Hari 08:00 - 22:00 WIB',
-    bank: 'BCA 1234567890 a/n ID Hiking Rent',
-    qris: true,
-    delivery: true,
-    maps: 'https://maps.google.com/?q=Wonosobo',
-  });
+  if (count === 0) {
+    await db.collection('products').insertMany(SEED_PRODUCTS.map(p => ({ id: uuidv4(), status: 'READY', createdAt: new Date(), ...p })));
+    await db.collection('promos').insertMany(SEED_PROMOS.map(p => ({ id: uuidv4(), active: true, ...p })));
+    await db.collection('reviews').insertMany(SEED_REVIEWS.map(r => ({ id: uuidv4(), createdAt: new Date(), ...r })));
+    await db.collection('packages').insertMany(SEED_PACKAGES.map(p => ({ id: uuidv4(), ...p })));
+    await db.collection('faqs').insertMany(SEED_FAQS.map(f => ({ id: uuidv4(), ...f })));
+    await db.collection('settings').insertOne({
+      id: 'main',
+      whatsapp: '6287777728727',
+      address: 'Jl. Dieng KM 3, Wonosobo, Jawa Tengah 56311',
+      hours: 'Setiap Hari 08:00 - 22:00 WIB',
+      bank: 'BCA 1234567890 a/n ID Hiking Rent',
+      qris: true,
+      delivery: true,
+      maps: 'https://maps.google.com/?q=Wonosobo',
+    });
+  }
+  // Ensure gallery seed exists even if other collections already seeded
+  const gCount = await db.collection('gallery').countDocuments();
+  if (gCount === 0) {
+    await db.collection('gallery').insertMany(SEED_GALLERY.map((g, i) => ({ id: uuidv4(), order: i, createdAt: new Date(), ...g })));
+  }
 }
 
 function stripId(doc) {
   if (!doc) return doc;
   const { _id, ...rest } = doc;
   return rest;
+}
+
+function isAdmin(request) {
+  const token = request.headers.get('x-admin-token') || '';
+  return token === ADMIN_PASSWORD;
+}
+
+// Check overlap: (a1 < b2) && (b1 < a2)  -- dates as YYYY-MM-DD strings
+function overlaps(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+async function getBookedQtyForRange(db, productId, start, end) {
+  const orders = await db.collection('orders').find({ productId, status: { $ne: 'CANCELLED' } }).toArray();
+  let booked = 0;
+  for (const o of orders) {
+    if (o.startDate && o.endDate && overlaps(start, end, o.startDate, o.endDate)) {
+      booked += Number(o.qty || 0);
+    }
+  }
+  return booked;
+}
+
+async function computeBookedDates(db, productId, product, days = 60) {
+  const now = new Date();
+  const orders = await db.collection('orders').find({ productId, status: { $ne: 'CANCELLED' } }).toArray();
+  const fullBooked = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(now); d.setDate(d.getDate() + i);
+    const dayStr = d.toISOString().slice(0, 10);
+    const nextStr = new Date(d.getTime() + 86400000).toISOString().slice(0, 10);
+    let booked = 0;
+    for (const o of orders) {
+      if (o.startDate && o.endDate && overlaps(dayStr, nextStr, o.startDate, o.endDate)) {
+        booked += Number(o.qty || 0);
+      }
+    }
+    if (booked >= (product.stock || 0)) fullBooked.push(dayStr);
+  }
+  return fullBooked;
 }
 
 async function handler(request, { params }) {
@@ -126,6 +188,7 @@ async function handler(request, { params }) {
       return NextResponse.json({ ok: true, name: 'ID Hiking Rent API' });
     }
 
+    // ============ PUBLIC ============
     if (route === 'products' && method === 'GET') {
       const q = url.searchParams.get('q') || '';
       const category = url.searchParams.get('category') || '';
@@ -141,12 +204,35 @@ async function handler(request, { params }) {
       return NextResponse.json({ products });
     }
 
-    if (route.startsWith('products/') && method === 'GET') {
+    if (route.startsWith('products/') && pathArr.length === 2 && method === 'GET') {
       const id = pathArr[1];
       const product = await db.collection('products').findOne({ id });
       if (!product) return NextResponse.json({ error: 'not found' }, { status: 404 });
       const related = (await db.collection('products').find({ category: product.category, id: { $ne: id } }).limit(4).toArray()).map(stripId);
       return NextResponse.json({ product: stripId(product), related });
+    }
+
+    // GET /api/products/:id/availability?start=&end=
+    if (route.startsWith('products/') && pathArr[2] === 'availability' && method === 'GET') {
+      const id = pathArr[1];
+      const start = url.searchParams.get('start');
+      const end = url.searchParams.get('end');
+      const product = await db.collection('products').findOne({ id });
+      if (!product) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      let bookedQty = 0;
+      let remaining = product.stock;
+      if (start && end) {
+        bookedQty = await getBookedQtyForRange(db, id, start, end);
+        remaining = Math.max(0, (product.stock || 0) - bookedQty);
+      }
+      const fullBookedDates = await computeBookedDates(db, id, product, 60);
+      return NextResponse.json({
+        stock: product.stock,
+        bookedQty,
+        remaining,
+        available: remaining > 0,
+        fullBookedDates,
+      });
     }
 
     if (route === 'promos' && method === 'GET') {
@@ -155,7 +241,7 @@ async function handler(request, { params }) {
     }
 
     if (route === 'reviews' && method === 'GET') {
-      const reviews = (await db.collection('reviews').find({}).limit(20).toArray()).map(stripId);
+      const reviews = (await db.collection('reviews').find({}).limit(50).toArray()).map(stripId);
       return NextResponse.json({ reviews });
     }
 
@@ -174,6 +260,11 @@ async function handler(request, { params }) {
       return NextResponse.json({ settings: stripId(s) });
     }
 
+    if (route === 'gallery' && method === 'GET') {
+      const items = (await db.collection('gallery').find({}).sort({ order: 1, createdAt: -1 }).toArray()).map(stripId);
+      return NextResponse.json({ gallery: items });
+    }
+
     if (route === 'orders' && method === 'POST') {
       const body = await request.json();
       const order = {
@@ -187,9 +278,104 @@ async function handler(request, { params }) {
       return NextResponse.json({ order: stripId(order) });
     }
 
-    if (route === 'orders' && method === 'GET') {
-      const orders = (await db.collection('orders').find({}).sort({ createdAt: -1 }).limit(50).toArray()).map(stripId);
-      return NextResponse.json({ orders });
+    // ============ ADMIN ============
+    if (route === 'admin/login' && method === 'POST') {
+      const body = await request.json();
+      if (body.password === ADMIN_PASSWORD) {
+        return NextResponse.json({ ok: true, token: ADMIN_PASSWORD });
+      }
+      return NextResponse.json({ error: 'Password salah' }, { status: 401 });
+    }
+
+    // From here, require admin token
+    const isProtected = route.startsWith('admin/');
+    if (isProtected && !isAdmin(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (route === 'admin/stats' && method === 'GET') {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const [todayOrders, monthOrders, allProducts, activePromos, lowStock, totalOrdersCount] = await Promise.all([
+        db.collection('orders').find({ createdAt: { $gte: startOfDay } }).toArray(),
+        db.collection('orders').find({ createdAt: { $gte: startOfMonth } }).toArray(),
+        db.collection('products').find({}).toArray(),
+        db.collection('promos').countDocuments({ active: true }),
+        db.collection('products').find({ stock: { $lte: 2 } }).toArray(),
+        db.collection('orders').countDocuments({}),
+      ]);
+      const monthRevenue = monthOrders.reduce((s, o) => s + Number(o.total || 0), 0);
+      // top product by number of orders (count)
+      const productCounts = {};
+      const allOrders = await db.collection('orders').find({}).toArray();
+      allOrders.forEach(o => { if (o.productName) productCounts[o.productName] = (productCounts[o.productName] || 0) + Number(o.qty || 1); });
+      const topProduct = Object.entries(productCounts).sort((a, b) => b[1] - a[1])[0];
+      return NextResponse.json({
+        todayBookings: todayOrders.length,
+        monthRevenue,
+        topProduct: topProduct ? { name: topProduct[0], count: topProduct[1] } : null,
+        activePromos,
+        lowStock: lowStock.map(stripId),
+        totalCustomers: totalOrdersCount,
+        productsCount: allProducts.length,
+      });
+    }
+
+    // Generic collection CRUD via /admin/{collection} etc.
+    const COLLECTIONS = {
+      'admin/products': 'products',
+      'admin/promos': 'promos',
+      'admin/reviews': 'reviews',
+      'admin/packages': 'packages',
+      'admin/faqs': 'faqs',
+      'admin/gallery': 'gallery',
+      'admin/orders': 'orders',
+    };
+
+    // GET list under admin
+    for (const [routeKey, col] of Object.entries(COLLECTIONS)) {
+      if (route === routeKey && method === 'GET') {
+        const items = (await db.collection(col).find({}).sort({ createdAt: -1 }).toArray()).map(stripId);
+        return NextResponse.json({ items });
+      }
+      if (route === routeKey && method === 'POST') {
+        const body = await request.json();
+        const doc = { id: uuidv4(), createdAt: new Date(), ...body };
+        if (col === 'products' && !doc.status) doc.status = 'READY';
+        if (col === 'promos' && doc.active === undefined) doc.active = true;
+        await db.collection(col).insertOne(doc);
+        return NextResponse.json({ item: stripId(doc) });
+      }
+      if (route.startsWith(routeKey + '/') && pathArr.length === 3) {
+        const id = pathArr[2];
+        if (method === 'PUT') {
+          const body = await request.json();
+          delete body._id;
+          delete body.id;
+          await db.collection(col).updateOne({ id }, { $set: body });
+          const updated = await db.collection(col).findOne({ id });
+          return NextResponse.json({ item: stripId(updated) });
+        }
+        if (method === 'DELETE') {
+          await db.collection(col).deleteOne({ id });
+          return NextResponse.json({ ok: true });
+        }
+      }
+    }
+
+    // Settings
+    if (route === 'admin/settings' && method === 'PUT') {
+      const body = await request.json();
+      delete body._id;
+      await db.collection('settings').updateOne({ id: 'main' }, { $set: body }, { upsert: true });
+      const s = await db.collection('settings').findOne({ id: 'main' });
+      return NextResponse.json({ settings: stripId(s) });
+    }
+
+    if (route === 'admin/settings' && method === 'GET') {
+      const s = await db.collection('settings').findOne({ id: 'main' });
+      return NextResponse.json({ settings: stripId(s) });
     }
 
     if (route === 'seed/reset' && method === 'POST') {
@@ -199,8 +385,14 @@ async function handler(request, { params }) {
       await db.collection('packages').deleteMany({});
       await db.collection('faqs').deleteMany({});
       await db.collection('settings').deleteMany({});
+      await db.collection('gallery').deleteMany({});
       await ensureSeeded(db);
       return NextResponse.json({ ok: true, reset: true });
+    }
+
+    if (route === 'orders' && method === 'GET') {
+      const orders = (await db.collection('orders').find({}).sort({ createdAt: -1 }).limit(50).toArray()).map(stripId);
+      return NextResponse.json({ orders });
     }
 
     return NextResponse.json({ error: 'Route not found', route, method }, { status: 404 });

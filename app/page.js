@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Minus, MapPin, Clock, CreditCard,
   Truck, Sparkles, Award, Flame, Shield, Zap, PackageCheck, Compass, Tent,
   Backpack, Sun, Cloud, CloudRain, Wind, Thermometer, Sunrise, Sunset, Phone,
-  Instagram, Facebook, Check, ChevronUp, Calendar as CalendarIcon
+  Instagram, Facebook, Check, ChevronUp, Calendar as CalendarIcon, ImagePlus, ZoomIn, AlertTriangle
 } from 'lucide-react';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '6287777728727';
@@ -950,6 +950,79 @@ function Footer() {
   );
 }
 
+/* ===================== GALLERY + LIGHTBOX ===================== */
+function Gallery({ items }) {
+  const [zoom, setZoom] = useState(null);
+  if (!items?.length) return null;
+  return (
+    <section id="galeri" className="py-12 md:py-20">
+      <div className="max-w-6xl mx-auto px-5">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
+            <ImagePlus className="w-3 h-3" /> Galeri
+          </div>
+          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+            <span className="gold-text">Momen</span> Pendakian
+          </h2>
+          <p className="text-xs md:text-sm text-white/60 mt-2 max-w-md mx-auto">Foto-foto summit, camping & alat rental kami. Nikmati momen bersama ID Hiking Rent.</p>
+        </div>
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3 space-y-2 md:space-y-3">
+          {items.map((g, i) => (
+            <motion.button
+              key={g.id}
+              onClick={() => setZoom(g)}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: (i % 8) * 0.06 }}
+              viewport={{ once: true }}
+              className={`relative w-full block break-inside-avoid overflow-hidden rounded-xl md:rounded-2xl group ${i % 3 === 0 ? 'aspect-[3/4]' : i % 4 === 0 ? 'aspect-[4/3]' : 'aspect-square'}`}
+            >
+              <img src={g.url} alt={g.caption || 'Gallery'} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition" />
+              <div className="absolute inset-x-2 bottom-2 flex items-end justify-between gap-2">
+                <div className="text-[10px] md:text-xs text-white font-medium text-left line-clamp-1">{g.caption}</div>
+                <div className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center backdrop-blur">
+                  <ZoomIn className="w-3 h-3 text-gold" />
+                </div>
+              </div>
+              {g.category && (
+                <div className="absolute top-2 left-2 text-[8px] px-2 py-0.5 rounded-full bg-black/60 text-gold uppercase tracking-widest backdrop-blur">{g.category}</div>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {zoom && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setZoom(null)}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur flex items-center justify-center p-4"
+          >
+            <button onClick={() => setZoom(null)} className="absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 z-10">
+              <X className="w-5 h-5" />
+            </button>
+            <motion.img
+              key={zoom.id}
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              onClick={e => e.stopPropagation()}
+              src={zoom.url}
+              alt={zoom.caption}
+              className="max-w-full max-h-[85svh] object-contain rounded-xl"
+            />
+            {zoom.caption && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 dark-glass rounded-full px-5 py-2.5 text-sm text-white">
+                {zoom.caption}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
 /* ===================== FLOATING WA ===================== */
 function FloatingWA() {
   return (
@@ -975,8 +1048,21 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
   const [endDate, setEndDate] = useState(addDaysISO(2));
   const [qty, setQty] = useState(1);
   const [step, setStep] = useState(1); // 1 dates, 2 summary
+  const [availability, setAvailability] = useState(null);
+  const [loadingAvail, setLoadingAvail] = useState(false);
   const days = diffDays(startDate, endDate);
   const total = (product?.price || 0) * qty * days;
+
+  // Load availability whenever product or dates change
+  useEffect(() => {
+    if (!product) return;
+    setLoadingAvail(true);
+    fetch(`/api/products/${product.id}/availability?start=${startDate}&end=${endDate}`)
+      .then(r => r.json())
+      .then(d => setAvailability(d))
+      .catch(() => setAvailability(null))
+      .finally(() => setLoadingAvail(false));
+  }, [product, startDate, endDate]);
 
   const related = useMemo(() => {
     if (!product) return [];
@@ -1082,12 +1168,28 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
                       <Minus className="w-4 h-4" />
                     </button>
                     <div className="flex-1 text-center font-serif text-2xl gold-text font-bold">{qty}</div>
-                    <button onClick={() => setQty(q => Math.min(product.stock, q + 1))} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:border-gold transition">
+                    <button onClick={() => setQty(q => Math.min(availability?.remaining ?? product.stock, q + 1))} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:border-gold transition">
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="text-[10px] text-white/40 mt-1 text-center">Maks {product.stock} pcs tersedia</div>
+                  <div className="text-[10px] text-white/40 mt-1 text-center">
+                    {availability ? `${availability.remaining} tersedia dari ${product.stock} unit` : `Maks ${product.stock} pcs tersedia`}
+                  </div>
                 </div>
+
+                {/* Availability */}
+                {availability && (
+                  <div className={`rounded-2xl p-3.5 border ${availability.remaining <= 0 ? 'bg-red-500/10 border-red-500/30 text-red-200' : availability.remaining < 3 ? 'bg-orange-500/10 border-orange-500/30 text-orange-200' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'} text-xs flex items-start gap-2`}>
+                    {availability.remaining <= 0 ? <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                    <div className="flex-1">
+                      {availability.remaining <= 0 ? (
+                        <><b>FULL BOOKED.</b> Stok sudah habis untuk tanggal ini. Silakan pilih tanggal lain atau hubungi kami untuk alternatif.</>
+                      ) : (
+                        <><b>{availability.remaining} unit tersedia</b> pada tanggal {fmtDate(startDate)} — {fmtDate(endDate)}{availability.bookedQty > 0 ? ` (${availability.bookedQty} sudah dibooking)` : ''}.</>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Total live */}
                 <div className="bg-gradient-to-br from-yellow-500/10 to-amber-800/5 border border-gold-30 rounded-2xl p-4">
@@ -1123,8 +1225,12 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
 
               {/* Sticky footer */}
               <div className="sticky bottom-0 sticky-cta p-4 border-t border-white/5">
-                <button onClick={() => setStep(2)} className="w-full py-3.5 rounded-full gold-gradient-bg text-black font-semibold flex items-center justify-center gap-2 gold-glow-sm">
-                  Lanjut ke Ringkasan <ArrowRight className="w-4 h-4" />
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={availability && availability.remaining <= 0}
+                  className="w-full py-3.5 rounded-full gold-gradient-bg text-black font-semibold flex items-center justify-center gap-2 gold-glow-sm disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                >
+                  {availability && availability.remaining <= 0 ? 'Tanggal Full Booked' : (<>Lanjut ke Ringkasan <ArrowRight className="w-4 h-4" /></>)}
                 </button>
               </div>
             </>
@@ -1207,19 +1313,21 @@ export default function App() {
   const [reviews, setReviews] = useState([]);
   const [packages, setPackages] = useState([]);
   const [faqs, setFaqs] = useState([]);
+  const [gallery, setGallery] = useState([]);
   const [settings, setSettings] = useState(null);
   const [bookingProduct, setBookingProduct] = useState(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [p, pr, r, pk, f, s] = await Promise.all([
+        const [p, pr, r, pk, f, s, g] = await Promise.all([
           fetch('/api/products').then(x => x.json()),
           fetch('/api/promos').then(x => x.json()),
           fetch('/api/reviews').then(x => x.json()),
           fetch('/api/packages').then(x => x.json()),
           fetch('/api/faqs').then(x => x.json()),
           fetch('/api/settings').then(x => x.json()),
+          fetch('/api/gallery').then(x => x.json()),
         ]);
         setProducts(p.products || []);
         setPromos(pr.promos || []);
@@ -1227,6 +1335,7 @@ export default function App() {
         setPackages(pk.packages || []);
         setFaqs(f.faqs || []);
         setSettings(s.settings || null);
+        setGallery(g.gallery || []);
       } catch (e) {
         console.error('Load error', e);
       }
@@ -1283,6 +1392,7 @@ export default function App() {
         <Weather />
         <HowToRent />
         <Reviews reviews={reviews} />
+        <Gallery items={gallery} />
         <StoreInfo settings={settings} />
         <FAQSection faqs={faqs} />
         <CTA onBook={() => openBooking()} />

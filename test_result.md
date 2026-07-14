@@ -118,6 +118,97 @@ backend:
     status_history:
         - working: "NA"
           agent: "main"
+  - task: "Admin authentication (POST /api/admin/login)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Validates password against ADMIN_PASSWORD env, returns token. Admin routes require 'x-admin-token' header."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified: POST /api/admin/login with correct password (admin123) returns {ok: true, token: 'admin123'}, wrong password returns 401 with error 'Password salah'. Admin auth guard working - requests without x-admin-token header to /api/admin/stats and /api/admin/products return 401 Unauthorized."
+
+  - task: "Admin stats (GET /api/admin/stats)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Returns todayBookings, monthRevenue, topProduct, activePromos, lowStock, totalCustomers, productsCount."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified: GET /api/admin/stats with x-admin-token header returns 200 with all required keys (todayBookings, monthRevenue, topProduct, activePromos, lowStock, totalCustomers, productsCount). lowStock is array, todayBookings is number (1), monthRevenue is number (60000). All data types correct."
+
+  - task: "Admin CRUD for products/promos/reviews/packages/faqs/gallery"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Generic CRUD endpoints under /api/admin/{collection}. Supports GET list, POST create, PUT update, DELETE."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified CRUD operations for all 6 collections (products, promos, reviews, packages, faqs, gallery): POST creates item with UUID id, GET lists all items, PUT updates specific fields, DELETE removes item. All operations require x-admin-token header. Tested: POST /api/admin/products (created test item), GET returns items array, PUT updated price from 20000 to 25000, DELETE removed item. Same flow verified for promos, reviews, packages, faqs, gallery. All responses properly strip MongoDB _id field."
+
+  - task: "Admin settings & orders management"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "PUT /api/admin/settings updates store info. PUT /api/admin/orders/:id updates status."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified: GET /api/admin/orders returns {items: [...]} with all orders, PUT /api/admin/orders/{id} with {status: 'CONFIRMED'} successfully updates order status. GET /api/admin/settings returns {settings: {...}} with all store info, PUT /api/admin/settings with {hours: '08:00-20:00'} successfully updates settings. All operations require x-admin-token header."
+
+  - task: "Product availability check (GET /api/products/:id/availability)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Calculates booked qty for a date range vs stock. Returns fullBookedDates[] for next 60 days for calendar display."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified: GET /api/products/{id}/availability?start=2026-08-01&end=2026-08-03 returns {stock, bookedQty, remaining, available, fullBookedDates}. Stock matches product stock (3), fullBookedDates is array. Created test order with qty=2 for dates 2026-08-05 to 2026-08-07, re-checked availability for same dates - bookedQty increased to 2, remaining decreased to 1 (stock 3 - booked 2). Availability calculation working correctly with date overlap detection."
+
+  - task: "Gallery public endpoint (GET /api/gallery)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Auto-seeds 9 gallery items. Returns { gallery: [...] } sorted by order."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed. Verified: GET /api/gallery (public endpoint, no auth required) returns {gallery: [...]} with 9 gallery items. Each item has required fields (id, url, caption, category), MongoDB _id properly stripped. Items sorted by order field."
+
+
           comment: "Implemented list endpoint with q, category, sort filters. Auto-seeds 22 products on first call."
         - working: true
           agent: "testing"
@@ -279,9 +370,37 @@ agent_communication:
         3) GET /api/promos, /api/reviews, /api/packages, /api/faqs, /api/settings
         4) POST /api/orders with { productId, productName, qty, startDate, endDate, days, total, message } — verify invoiceNo returned
         5) POST /api/seed/reset (optional; keeps data intact after)
+
+    - agent: "main"
+      message: |
+        NEW ADMIN & AVAILABILITY ENDPOINTS ADDED. Please test these next:
+        Auth: POST /api/admin/login with { password: "admin123" } → { ok:true, token }
+        All admin CRUD endpoints require header 'x-admin-token: admin123'.
+        
+        1) POST /api/admin/login — verify success with "admin123", failure with wrong password (401)
+        2) GET /api/admin/stats — verify returns todayBookings, monthRevenue, topProduct, activePromos, lowStock[], totalCustomers, productsCount
+        3) Test CRUD on: admin/products, admin/promos, admin/reviews, admin/packages, admin/faqs, admin/gallery
+           - GET /api/admin/{collection} → { items: [] }
+           - POST /api/admin/{collection} with test data → { item }
+           - PUT /api/admin/{collection}/{id} with update → { item }
+           - DELETE /api/admin/{collection}/{id} → { ok:true }
+        4) GET /api/admin/settings, PUT /api/admin/settings with new address
+        5) GET /api/admin/orders — list orders; PUT /api/admin/orders/{id} to change status to CONFIRMED
+        6) Test unauthorized access: request without token → 401
+        
+        AVAILABILITY:
+        7) GET /api/products/{id}/availability?start=YYYY-MM-DD&end=YYYY-MM-DD
+           - Verify returns { stock, bookedQty, remaining, available, fullBookedDates[] }
+           - Create an order that covers the date range then re-check — remaining should decrease
+        
+        8) GET /api/gallery (public) → { gallery: [] } with pre-seeded items
+        
+        IMPORTANT: 
+        - Do not hardcode token; use "admin123" from ADMIN_PASSWORD env
+        - Make sure /admin/... endpoints reject requests without valid token
     - agent: "testing"
       message: |
-        ✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (56/56)
+        ✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (72/72)
         
         Tested all backend API endpoints successfully:
         
@@ -320,3 +439,56 @@ agent_communication:
         All routes properly prefixed with /api.
         
         NO CRITICAL ISSUES FOUND. Backend is production-ready.
+    - agent: "testing"
+      message: |
+        ✅ NEW ADMIN & AVAILABILITY ENDPOINTS TESTING COMPLETE - ALL TESTS PASSED (72/72)
+        
+        Tested all NEW backend admin and availability endpoints successfully:
+        
+        1. POST /api/admin/login - ✅ Working
+           - Correct password (admin123) returns {ok: true, token: 'admin123'}
+           - Wrong password returns 401 with error 'Password salah'
+        
+        2. Admin Auth Guard - ✅ Working
+           - GET /api/admin/stats without token → 401 Unauthorized
+           - GET /api/admin/products without token → 401 Unauthorized
+           - All admin routes properly protected
+        
+        3. GET /api/admin/stats - ✅ Working
+           - Returns all required keys: todayBookings, monthRevenue, topProduct, activePromos, lowStock, totalCustomers, productsCount
+           - lowStock is array, todayBookings=1, monthRevenue=60000
+           - All data types correct
+        
+        4. Admin CRUD Operations - ✅ Working (6 collections tested)
+           - POST /api/admin/products: Creates item with UUID id
+           - GET /api/admin/products: Lists all items
+           - PUT /api/admin/products/{id}: Updates specific fields (price 20000→25000)
+           - DELETE /api/admin/products/{id}: Removes item successfully
+           - Same CRUD flow verified for: promos, reviews, packages, faqs, gallery
+           - All operations require x-admin-token header
+        
+        5. Admin Orders Management - ✅ Working
+           - GET /api/admin/orders: Returns {items: [...]}
+           - PUT /api/admin/orders/{id}: Updates order status to CONFIRMED
+        
+        6. Admin Settings Management - ✅ Working
+           - GET /api/admin/settings: Returns {settings: {...}}
+           - PUT /api/admin/settings: Updates hours to '08:00-20:00'
+        
+        7. Product Availability - ✅ Working
+           - GET /api/products/{id}/availability?start=2026-08-01&end=2026-08-03
+           - Returns: stock, bookedQty, remaining, available, fullBookedDates
+           - Created test order (qty=2) for dates 2026-08-05 to 2026-08-07
+           - Re-checked availability: bookedQty=2, remaining=1 (stock 3 - booked 2)
+           - Date overlap detection working correctly
+        
+        8. GET /api/gallery (public) - ✅ Working
+           - Returns {gallery: [...]} with 9 items
+           - Each item has: id, url, caption, category
+           - No auth required (public endpoint)
+           - MongoDB _id properly stripped
+        
+        ALL 72 TESTS PASSED. NO CRITICAL ISSUES FOUND.
+        All admin endpoints properly secured with x-admin-token header.
+        Availability calculation correctly handles date overlaps and booking quantities.
+        Backend is production-ready.
