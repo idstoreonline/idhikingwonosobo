@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 2%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 42 65% 52%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 42 65% 52%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 42 65% 52%;
+    --radius: 0.75rem;
+  }
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: #050505;
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(135deg, #f4d47c 0%, #d4af37 40%, #b8860b 70%, #f4d47c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gold-border {
+  position: relative;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #f4d47c 0%, #d4af37 50%, #b8860b 100%);
+}
+
+.dark-glass {
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.gold-glow {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3), 0 0 80px rgba(212, 175, 55, 0.1);
+}
+
+.gold-glow-sm {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6), 0 0 100px rgba(212, 175, 55, 0.3); }
+}
+
+.pulse-gold {
+  animation: pulse-gold 2.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+
+@keyframes fog-drift {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 0.4; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+.fog-layer {
+  animation: fog-drift 20s linear infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #d4af37, #b8860b); border-radius: 3px; }
+
+/* Hide scrollbar for horizontal scrollers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Loading screen logo */
+.logo-mark {
+  background: linear-gradient(135deg, #f4d47c 0%, #d4af37 50%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.5));
+}
+
+/* Product card hover */
+.product-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 20px 40px -20px rgba(212, 175, 55, 0.3);
+}
+
+/* Sticky bottom action bar for mobile */
+.sticky-cta {
+  background: linear-gradient(180deg, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.98) 40%);
+  backdrop-filter: blur(20px);
+}
+
+/* Marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+}
+
+/* Custom checkbox for gold theme */
+.gold-radio:checked {
+  background: #d4af37;
+  border-color: #d4af37;
+}
+
+/* Utility */
+.text-gold { color: #d4af37; }
+.bg-gold { background: #d4af37; }
+.border-gold { border-color: #d4af37; }
+.border-gold-30 { border-color: rgba(212, 175, 55, 0.3); }
