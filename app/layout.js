@@ -22,7 +22,7 @@ export const metadata = {
   authors: [{ name: 'ID Hiking Rent Wonosobo' }],
   openGraph: {
     title: 'ID Hiking Rent Wonosobo — Sewa Alat Hiking Premium',
-    description: 'Partner petualanganmu di Gunung Prau, Sindoro & Dieng. Alat bersih, lengkap, dan siap menemani petualanganmu.',
+    description: 'Partner petualanganmu di Gunung Prau, Sindoro, Dieng & Dll. Alat bersih, lengkap, dan siap menemani petualanganmu.',
     type: 'website',
     locale: 'id_ID',
     siteName: 'ID Hiking Rent Wonosobo',
