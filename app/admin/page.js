@@ -61,7 +61,7 @@ function AdminLogin({ onLogin }) {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 via-amber-600 to-yellow-800 flex items-center justify-center gold-glow-sm">
             <Mountain className="w-7 h-7 text-black" strokeWidth={2.5} />
           </div>
-          <h1 className="font-serif text-2xl gold-text font-bold mt-4">Admin Dashboard</h1>
+          <h1 className="font-heading text-2xl gold-text font-bold mt-4">Admin Dashboard</h1>
           <p className="text-xs text-white/50 mt-1">ID Hiking Rent Wonosobo</p>
         </div>
 
@@ -151,7 +151,7 @@ function Modal({ open, onClose, title, children, size = 'md' }) {
         className={`w-full ${size === 'lg' ? 'max-w-3xl' : 'max-w-lg'} max-h-[92svh] overflow-y-auto bg-[#0a0a0a] border-t border-x border-gold-30 md:border md:rounded-2xl rounded-t-2xl`}
       >
         <div className="sticky top-0 z-10 bg-[#0a0a0a]/95 backdrop-blur border-b border-white/10 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-lg gold-text font-bold">{title}</h3>
+          <h3 className="font-heading text-lg gold-text font-bold">{title}</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10">
             <X className="w-4 h-4" />
           </button>
@@ -203,14 +203,14 @@ function Dashboard() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-serif text-2xl gold-text font-bold">Overview</h2>
+        <h2 className="font-heading text-2xl gold-text font-bold">Overview</h2>
         <p className="text-xs text-white/50 mt-1">Statistik toko real-time</p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {cards.map((c, i) => (
           <div key={i} className={`bg-gradient-to-br ${c.color} border border-white/5 rounded-2xl p-4`}>
             <c.icon className={`w-5 h-5 ${c.iconColor}`} />
-            <div className="mt-3 font-serif text-2xl md:text-3xl text-white font-bold">{c.value}</div>
+            <div className="mt-3 font-heading text-2xl md:text-3xl text-white font-bold">{c.value}</div>
             <div className="text-[10px] tracking-widest uppercase text-white/50 mt-1">{c.label}</div>
           </div>
         ))}
@@ -219,7 +219,7 @@ function Dashboard() {
         <div className="dark-glass rounded-2xl p-5">
           <div className="text-[10px] tracking-widest uppercase text-gold mb-2">Produk Terlaris</div>
           <div className="flex items-center justify-between">
-            <div className="font-serif text-xl text-white font-bold">{stats.topProduct.name}</div>
+            <div className="font-heading text-xl text-white font-bold">{stats.topProduct.name}</div>
             <div className="text-sm text-white/70">{stats.topProduct.count} kali disewa</div>
           </div>
         </div>
@@ -264,7 +264,7 @@ function ProductsAdmin() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-2xl gold-text font-bold">Produk</h2>
+          <h2 className="font-heading text-2xl gold-text font-bold">Produk</h2>
           <p className="text-xs text-white/50">{items.length} produk aktif</p>
         </div>
         <Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Tambah</Btn>
@@ -298,17 +298,38 @@ function ProductsAdmin() {
 
 function ProductForm({ editing, onClose, onSaved }) {
   const [f, setF] = useState({});
-  useEffect(() => { setF(editing || {}); }, [editing]);
+  useEffect(() => {
+    setF({
+      ...editing,
+      imagesText: (editing?.images && editing.images.length ? editing.images : (editing?.image ? [editing.image] : [])).join('\n'),
+      pricingText: editing?.pricingTiers?.length
+        ? editing.pricingTiers.map(t => `${t.days}=${t.price}`).join('\n')
+        : (editing?.price ? `1=${editing.price}\n2=${Math.round(editing.price*1.8)}\n3=${Math.round(editing.price*2.2)}\n5=${Math.round(editing.price*3.6)}` : ''),
+    });
+  }, [editing]);
   if (!editing) return null;
   const isNew = !editing.id;
+  const addImage = (url) => {
+    const arr = (f.imagesText || '').split('\n').filter(Boolean);
+    arr.push(url);
+    setF({ ...f, imagesText: arr.join('\n') });
+  };
   const submit = async () => {
+    const images = (f.imagesText || '').split('\n').map(s => s.trim()).filter(Boolean);
+    const pricingTiers = (f.pricingText || '').split('\n').map(line => {
+      const [d, p] = line.split('=').map(x => x.trim());
+      if (!d || !p) return null;
+      return { days: Number(d), price: Number(p) };
+    }).filter(Boolean);
     const payload = {
       name: f.name || '',
       category: f.category || 'Aksesoris',
       size: f.size || '',
       stock: Number(f.stock || 0),
       price: Number(f.price || 0),
-      image: f.image || '',
+      image: images[0] || f.image || '',
+      images,
+      pricingTiers,
       badge: f.badge || '',
       description: f.description || '',
       status: f.status || 'READY',
@@ -326,12 +347,30 @@ function ProductForm({ editing, onClose, onSaved }) {
     onClose();
   };
   const specsText = f.specsText !== undefined ? f.specsText : (f.specs ? Object.entries(f.specs).map(([k, v]) => `${k}: ${v}`).join('\n') : '');
+  const currentImages = (f.imagesText || '').split('\n').filter(Boolean);
   return (
     <Modal open={!!editing} onClose={onClose} title={isNew ? 'Tambah Produk' : 'Edit Produk'} size="lg">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <Field label="Gambar Produk">
-            <ImageUploader value={f.image} onChange={v => setF({ ...f, image: v })} />
+          <Field label="Gambar Produk (Multiple)">
+            <div className="space-y-2">
+              {currentImages.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                  {currentImages.map((im, i) => (
+                    <div key={i} className="relative flex-shrink-0">
+                      <img src={im} alt="" className="w-20 h-20 rounded-lg object-cover border border-white/10" />
+                      <button type="button" onClick={() => {
+                        const arr = currentImages.filter((_, j) => j !== i);
+                        setF({ ...f, imagesText: arr.join('\n') });
+                      }} className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <ImageUploader value="" onChange={(url) => url && addImage(url)} />
+              <Textarea rows={2} placeholder="Atau paste URL, satu per baris" value={f.imagesText || ''} onChange={e => setF({ ...f, imagesText: e.target.value })} />
+              <div className="text-[10px] text-white/40">Gambar pertama = thumbnail utama. Support upload multi & paste URL.</div>
+            </div>
           </Field>
         </div>
         <Field label="Nama Barang"><Input value={f.name || ''} onChange={e => setF({ ...f, name: e.target.value })} /></Field>
@@ -341,7 +380,7 @@ function ProductForm({ editing, onClose, onSaved }) {
           </select>
         </Field>
         <Field label="Ukuran"><Input value={f.size || ''} onChange={e => setF({ ...f, size: e.target.value })} placeholder="60L / M/L/XL" /></Field>
-        <Field label="Harga (per hari)"><Input type="number" value={f.price || ''} onChange={e => setF({ ...f, price: e.target.value })} /></Field>
+        <Field label="Harga Dasar (per hari)"><Input type="number" value={f.price || ''} onChange={e => setF({ ...f, price: e.target.value })} /></Field>
         <Field label="Stok"><Input type="number" value={f.stock || ''} onChange={e => setF({ ...f, stock: e.target.value })} /></Field>
         <Field label="Badge">
           <select value={f.badge || ''} onChange={e => setF({ ...f, badge: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white outline-none">
@@ -349,6 +388,12 @@ function ProductForm({ editing, onClose, onSaved }) {
             {['BEST SELLER','FAVORITE','NEW','LIMITED STOCK','PREMIUM GEAR','DISKON'].map(c => <option key={c} value={c} className="bg-black">{c}</option>)}
           </select>
         </Field>
+        <div className="md:col-span-2">
+          <Field label="Harga Berdasarkan Durasi (format: hari=harga, satu per baris)">
+            <Textarea rows={5} value={f.pricingText || ''} onChange={e => setF({ ...f, pricingText: e.target.value })} placeholder="1=25000&#10;2=40000&#10;3=55000&#10;4=70000&#10;5=85000" />
+            <div className="text-[10px] text-white/40 mt-1">Sistem otomatis pilih tier terdekat. Kosongi = pakai harga dasar × hari.</div>
+          </Field>
+        </div>
         <div className="md:col-span-2">
           <Field label="Deskripsi"><Textarea rows={3} value={f.description || ''} onChange={e => setF({ ...f, description: e.target.value })} /></Field>
         </div>
@@ -359,7 +404,7 @@ function ProductForm({ editing, onClose, onSaved }) {
         </div>
         <div className="md:col-span-2">
           <Field label="Spesifikasi (1 per baris, format kunci: nilai)">
-            <Textarea rows={4} value={specsText} onChange={e => setF({ ...f, specsText: e.target.value })} placeholder="kapasitas: 60 Liter\nberat: 1.9 kg" />
+            <Textarea rows={4} value={specsText} onChange={e => setF({ ...f, specsText: e.target.value })} placeholder="kapasitas: 60 Liter&#10;berat: 1.9 kg" />
           </Field>
         </div>
       </div>
@@ -394,7 +439,7 @@ function SimpleCRUD({ title, endpoint, fields, renderCard, singularName }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-2xl gold-text font-bold">{title}</h2>
+          <h2 className="font-heading text-2xl gold-text font-bold">{title}</h2>
           <p className="text-xs text-white/50">{items.length} item</p>
         </div>
         <Btn onClick={() => setEditing({})}><Plus className="w-4 h-4" /> Tambah</Btn>
@@ -499,7 +544,7 @@ function OrdersAdmin() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-2xl gold-text font-bold">Pesanan</h2>
+          <h2 className="font-heading text-2xl gold-text font-bold">Pesanan</h2>
           <p className="text-xs text-white/50">{items.length} pesanan</p>
         </div>
         <Btn variant="ghost" onClick={exportCSV}><FileText className="w-4 h-4" /> Export Excel</Btn>
@@ -586,7 +631,7 @@ function SettingsAdmin() {
   };
   return (
     <div className="space-y-4">
-      <h2 className="font-serif text-2xl gold-text font-bold">Informasi Toko</h2>
+      <h2 className="font-heading text-2xl gold-text font-bold">Informasi Toko</h2>
       <div className="grid grid-cols-1 gap-3">
         <Field label="WhatsApp (format 62xx)"><Input value={s.whatsapp || ''} onChange={e => setS({ ...s, whatsapp: e.target.value })} /></Field>
         <Field label="Alamat"><Textarea rows={2} value={s.address || ''} onChange={e => setS({ ...s, address: e.target.value })} /></Field>
@@ -674,7 +719,7 @@ export default function AdminPage() {
               <Mountain className="w-4 h-4 text-black" strokeWidth={2.5} />
             </div>
             <div className="leading-tight">
-              <div className="font-serif text-sm gold-text font-semibold">Admin Dashboard</div>
+              <div className="font-heading text-sm gold-text font-semibold">Admin Dashboard</div>
               <div className="text-[9px] tracking-widest text-white/50">ID HIKING RENT</div>
             </div>
           </div>

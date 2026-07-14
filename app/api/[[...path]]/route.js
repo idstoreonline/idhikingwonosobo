@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = process.env.DB_NAME || 'id_hiking_rent';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const FONNTE_TOKEN = process.env.FONNTE_TOKEN || '';
+const ADMIN_WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '6287777728727';
 
 let cachedClient = null;
 async function getDb() {
@@ -13,6 +15,32 @@ async function getDb() {
     await cachedClient.connect();
   }
   return cachedClient.db(DB_NAME);
+}
+
+function slugify(str) {
+  return (str || '')
+    .toString()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 80);
+}
+
+async function sendFonnteNotification(order) {
+  if (!FONNTE_TOKEN) return { skipped: true };
+  const message = `\ud83d\udd14 *BOOKING BARU - ID HIKING RENT*\n\nInvoice: ${order.invoiceNo}\nBarang: ${order.productName}\nJumlah: ${order.qty} pcs\nTanggal Sewa: ${order.startDate}\nTanggal Kembali: ${order.endDate}\nDurasi: ${order.days} hari\nTotal: Rp ${(order.total || 0).toLocaleString('id-ID')}\n${order.customerName ? 'Pemesan: ' + order.customerName + '\\n' : ''}\nCek dashboard admin untuk konfirmasi.`;
+  try {
+    const resp = await fetch('https://api.fonnte.com/send', {
+      method: 'POST',
+      headers: { 'Authorization': FONNTE_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ target: ADMIN_WA_NUMBER, message, countryCode: '62' }).toString(),
+    });
+    return { ok: resp.ok };
+  } catch (e) {
+    return { error: e.message };
+  }
 }
 
 const IMG = {
@@ -105,7 +133,27 @@ const SEED_GALLERY = [
 async function ensureSeeded(db) {
   const count = await db.collection('products').countDocuments();
   if (count === 0) {
-    await db.collection('products').insertMany(SEED_PRODUCTS.map(p => ({ id: uuidv4(), status: 'READY', createdAt: new Date(), ...p })));
+    await db.collection('products').insertMany(SEED_PRODUCTS.map(p => {
+      const base = Number(p.price) || 0;
+      // Auto duration pricing: day2 = 1.6x, day3 = 2.1x, then +price per day (approx 3-hari-bayar-2)
+      const pricingTiers = [
+        { days: 1, price: base },
+        { days: 2, price: Math.round(base * 1.8) },
+        { days: 3, price: Math.round(base * 2.2) },
+        { days: 4, price: Math.round(base * 3.0) },
+        { days: 5, price: Math.round(base * 3.6) },
+        { days: 7, price: Math.round(base * 4.8) },
+      ];
+      return {
+        id: uuidv4(),
+        slug: slugify(p.name),
+        status: 'READY',
+        images: [p.image],
+        pricingTiers,
+        createdAt: new Date(),
+        ...p,
+      };
+    }));
     await db.collection('promos').insertMany(SEED_PROMOS.map(p => ({ id: uuidv4(), active: true, ...p })));
     await db.collection('reviews').insertMany(SEED_REVIEWS.map(r => ({ id: uuidv4(), createdAt: new Date(), ...r })));
     await db.collection('packages').insertMany(SEED_PACKAGES.map(p => ({ id: uuidv4(), ...p })));
@@ -125,6 +173,25 @@ async function ensureSeeded(db) {
   const gCount = await db.collection('gallery').countDocuments();
   if (gCount === 0) {
     await db.collection('gallery').insertMany(SEED_GALLERY.map((g, i) => ({ id: uuidv4(), order: i, createdAt: new Date(), ...g })));
+  }
+  // Backfill missing slug / images / pricingTiers on existing products
+  const legacy = await db.collection('products').find({ $or: [ { slug: { $exists: false } }, { images: { $exists: false } }, { pricingTiers: { $exists: false } } ] }).toArray();
+  for (const p of legacy) {
+    const upd = {};
+    if (!p.slug) upd.slug = slugify(p.name);
+    if (!p.images || p.images.length === 0) upd.images = p.image ? [p.image] : [];
+    if (!p.pricingTiers) {
+      const base = Number(p.price) || 0;
+      upd.pricingTiers = [
+        { days: 1, price: base },
+        { days: 2, price: Math.round(base * 1.8) },
+        { days: 3, price: Math.round(base * 2.2) },
+        { days: 4, price: Math.round(base * 3.0) },
+        { days: 5, price: Math.round(base * 3.6) },
+        { days: 7, price: Math.round(base * 4.8) },
+      ];
+    }
+    if (Object.keys(upd).length) await db.collection('products').updateOne({ id: p.id }, { $set: upd });
   }
 }
 
@@ -206,9 +273,20 @@ async function handler(request, { params }) {
 
     if (route.startsWith('products/') && pathArr.length === 2 && method === 'GET') {
       const id = pathArr[1];
-      const product = await db.collection('products').findOne({ id });
+      // Try id first, fallback to slug
+      let product = await db.collection('products').findOne({ id });
+      if (!product) product = await db.collection('products').findOne({ slug: id });
       if (!product) return NextResponse.json({ error: 'not found' }, { status: 404 });
-      const related = (await db.collection('products').find({ category: product.category, id: { $ne: id } }).limit(4).toArray()).map(stripId);
+      const related = (await db.collection('products').find({ category: product.category, id: { $ne: product.id } }).limit(4).toArray()).map(stripId);
+      return NextResponse.json({ product: stripId(product), related });
+    }
+
+    // GET /api/products/slug/:slug (explicit slug lookup)
+    if (route.startsWith('products/slug/') && method === 'GET') {
+      const slug = pathArr[2];
+      const product = await db.collection('products').findOne({ slug });
+      if (!product) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      const related = (await db.collection('products').find({ category: product.category, id: { $ne: product.id } }).limit(4).toArray()).map(stripId);
       return NextResponse.json({ product: stripId(product), related });
     }
 
@@ -275,7 +353,20 @@ async function handler(request, { params }) {
         createdAt: new Date(),
       };
       await db.collection('orders').insertOne(order);
-      return NextResponse.json({ order: stripId(order) });
+      // Save admin notification for dashboard badge
+      await db.collection('notifications').insertOne({
+        id: uuidv4(),
+        type: 'NEW_ORDER',
+        orderId: order.id,
+        invoiceNo: order.invoiceNo,
+        title: `Booking Baru: ${order.productName}`,
+        message: `${order.qty} pcs \u00d7 ${order.days} hari = Rp ${(order.total || 0).toLocaleString('id-ID')}`,
+        read: false,
+        createdAt: new Date(),
+      });
+      // Optional Fonnte auto WA notification
+      const notif = await sendFonnteNotification(order);
+      return NextResponse.json({ order: stripId(order), notification: notif });
     }
 
     // ============ ADMIN ============
@@ -342,7 +433,20 @@ async function handler(request, { params }) {
       if (route === routeKey && method === 'POST') {
         const body = await request.json();
         const doc = { id: uuidv4(), createdAt: new Date(), ...body };
-        if (col === 'products' && !doc.status) doc.status = 'READY';
+        if (col === 'products') {
+          if (!doc.status) doc.status = 'READY';
+          if (!doc.slug) doc.slug = slugify(doc.name);
+          if (!doc.images && doc.image) doc.images = [doc.image];
+          if (!doc.pricingTiers && doc.price) {
+            const base = Number(doc.price) || 0;
+            doc.pricingTiers = [
+              { days: 1, price: base },
+              { days: 2, price: Math.round(base * 1.8) },
+              { days: 3, price: Math.round(base * 2.2) },
+              { days: 5, price: Math.round(base * 3.6) },
+            ];
+          }
+        }
         if (col === 'promos' && doc.active === undefined) doc.active = true;
         await db.collection(col).insertOne(doc);
         return NextResponse.json({ item: stripId(doc) });
@@ -353,6 +457,10 @@ async function handler(request, { params }) {
           const body = await request.json();
           delete body._id;
           delete body.id;
+          if (col === 'products') {
+            if (body.name && !body.slug) body.slug = slugify(body.name);
+            if (body.image && (!body.images || body.images.length === 0)) body.images = [body.image];
+          }
           await db.collection(col).updateOne({ id }, { $set: body });
           const updated = await db.collection(col).findOne({ id });
           return NextResponse.json({ item: stripId(updated) });
@@ -376,6 +484,21 @@ async function handler(request, { params }) {
     if (route === 'admin/settings' && method === 'GET') {
       const s = await db.collection('settings').findOne({ id: 'main' });
       return NextResponse.json({ settings: stripId(s) });
+    }
+
+    // Notifications
+    if (route === 'admin/notifications' && method === 'GET') {
+      const items = (await db.collection('notifications').find({}).sort({ createdAt: -1 }).limit(50).toArray()).map(stripId);
+      const unread = items.filter(n => !n.read).length;
+      return NextResponse.json({ items, unread });
+    }
+    if (route === 'admin/notifications/read-all' && method === 'POST') {
+      await db.collection('notifications').updateMany({ read: false }, { $set: { read: true } });
+      return NextResponse.json({ ok: true });
+    }
+    if (route.startsWith('admin/notifications/') && pathArr.length === 3 && method === 'DELETE') {
+      await db.collection('notifications').deleteOne({ id: pathArr[2] });
+      return NextResponse.json({ ok: true });
     }
 
     if (route === 'seed/reset' && method === 'POST') {

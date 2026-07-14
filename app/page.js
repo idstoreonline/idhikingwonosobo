@@ -65,7 +65,7 @@ function LoadingScreen({ onDone }) {
             </defs>
           </svg>
         </div>
-        <h1 className="font-serif text-2xl md:text-4xl mt-6 tracking-widest gold-text">
+        <h1 className="font-heading text-2xl md:text-4xl mt-6 tracking-widest gold-text">
           ID HIKING RENT
         </h1>
         <p className="text-[10px] md:text-xs tracking-[0.4em] text-white/60 mt-1">WONOSOBO</p>
@@ -103,7 +103,7 @@ function TopNav({ onBook }) {
             </div>
           </div>
           <div className="leading-tight">
-            <div className="font-serif text-sm md:text-base gold-text font-semibold">ID HIKING RENT</div>
+            <div className="font-heading text-sm md:text-base gold-text font-semibold">ID HIKING RENT</div>
             <div className="text-[8px] md:text-[10px] tracking-[0.3em] text-white/50">WONOSOBO</div>
           </div>
         </a>
@@ -150,7 +150,7 @@ function Hero({ onExplore }) {
         <motion.h1
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8 }}
-          className="font-serif text-3xl sm:text-5xl md:text-7xl leading-[1.05] tracking-tight"
+          className="hero-title text-3xl sm:text-5xl md:text-7xl leading-[1.02] tracking-tight uppercase"
         >
           <span className="text-white">SEWA ALAT </span>
           <span className="gold-text">HIKING PREMIUM</span>
@@ -249,7 +249,7 @@ function Stats() {
               viewport={{ once: true }}
               className="dark-glass rounded-2xl p-4 md:p-6 text-center"
             >
-              <div className="font-serif text-2xl md:text-4xl gold-text font-bold">{s.value}</div>
+              <div className="font-heading text-2xl md:text-4xl gold-text font-bold">{s.value}</div>
               <div className="text-[10px] md:text-xs tracking-widest uppercase text-white/60 mt-1">{s.label}</div>
             </motion.div>
           ))}
@@ -302,7 +302,7 @@ function PromoSlider({ promos, onBook }) {
                   <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/40 text-[10px] tracking-widest text-white uppercase mb-3">
                     <Flame className="w-3 h-3 text-gold" /> Promo Aktif
                   </div>
-                  <h3 className="font-serif text-2xl md:text-4xl text-white font-bold leading-tight">{p.title}</h3>
+                  <h3 className="font-heading text-2xl md:text-4xl text-white font-bold leading-tight">{p.title}</h3>
                   <p className="mt-2 text-white/85 text-sm md:text-base">{p.subtitle}</p>
                   <div className="mt-4 flex items-center gap-2">
                     <span className="text-4xl md:text-5xl font-bold gold-text">-{p.discount}%</span>
@@ -314,7 +314,7 @@ function PromoSlider({ promos, onBook }) {
                   <div className="flex gap-2">
                     {[{v:pad(countdown.h), l:'JAM'}, {v:pad(countdown.m), l:'MNT'}, {v:pad(countdown.s), l:'DTK'}].map((t,i) => (
                       <div key={i} className="dark-glass border-white/10 rounded-xl px-3 py-2 min-w-[52px] text-center">
-                        <div className="font-serif text-xl md:text-2xl gold-text font-bold">{t.v}</div>
+                        <div className="font-heading text-xl md:text-2xl gold-text font-bold">{t.v}</div>
                         <div className="text-[9px] tracking-widest text-white/60">{t.l}</div>
                       </div>
                     ))}
@@ -359,13 +359,14 @@ function BadgeChip({ label }) {
 function ProductCard({ p, onClick }) {
   const low = p.stock <= 2;
   return (
-    <motion.button
-      onClick={onClick}
+    <motion.a
+      href={`/produk/${p.slug || p.id}`}
+      onClick={(e) => { if (onClick) { e.preventDefault(); onClick(); } }}
       whileHover={{ y: -4 }}
-      className="product-card group relative text-left bg-gradient-to-b from-white/[0.03] to-white/[0.01] rounded-2xl overflow-hidden border border-white/5"
+      className="product-card group relative text-left bg-gradient-to-b from-white/[0.03] to-white/[0.01] rounded-2xl overflow-hidden border border-white/5 block"
     >
       <div className="relative aspect-square overflow-hidden bg-black">
-        <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+        <img src={(p.images && p.images[0]) || p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         {p.badge && (
           <div className="absolute top-2 left-2"><BadgeChip label={p.badge} /></div>
@@ -379,7 +380,7 @@ function ProductCard({ p, onClick }) {
       </div>
       <div className="p-2.5 md:p-3.5">
         <div className="text-[9px] md:text-[10px] tracking-widest text-gold uppercase">{p.category}</div>
-        <div className="font-medium text-white text-xs md:text-sm mt-0.5 line-clamp-2 leading-tight">{p.name}</div>
+        <div className="font-heading text-white text-xs md:text-sm mt-0.5 line-clamp-2 leading-tight uppercase">{p.name}</div>
         <div className="mt-1.5 flex items-center gap-1.5 text-[10px] md:text-xs text-white/50">
           <span>{p.size}</span>
           <span>•</span>
@@ -387,7 +388,7 @@ function ProductCard({ p, onClick }) {
         </div>
         <div className="mt-2 flex items-end justify-between">
           <div>
-            <div className="font-serif text-sm md:text-base gold-text font-bold leading-none">{rupiah(p.price)}</div>
+            <div className="font-heading text-sm md:text-base gold-text leading-none">{rupiah(p.price)}</div>
             <div className="text-[9px] md:text-[10px] text-white/40 mt-0.5">/ hari</div>
           </div>
           <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/5 group-hover:gold-gradient-bg group-hover:text-black flex items-center justify-center transition text-white">
@@ -395,7 +396,7 @@ function ProductCard({ p, onClick }) {
           </div>
         </div>
       </div>
-    </motion.button>
+    </motion.a>
   );
 }
 
@@ -423,7 +424,7 @@ function ProductsSection({ products, onOpen }) {
             <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
               <Sparkles className="w-3 h-3" /> Rental Terlaris
             </div>
-            <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+            <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
               Alat <span className="gold-text">Favorit Pendaki</span>
             </h2>
             <p className="text-xs md:text-sm text-white/60 mt-1">Paling banyak disewa minggu ini di Wonosobo</p>
@@ -460,7 +461,7 @@ function ProductsSection({ products, onOpen }) {
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-4">
           {filtered.slice(0, visible).map(p => (
-            <ProductCard key={p.id} p={p} onClick={() => onOpen(p)} />
+            <ProductCard key={p.id} p={p} />
           ))}
         </div>
 
@@ -488,7 +489,7 @@ function PackagesSection({ packages, onBookText }) {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <PackageCheck className="w-3 h-3" /> Paket Hemat
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">Paket <span className="gold-text">Bundling</span></h2>
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">Paket <span className="gold-text">Bundling</span></h2>
           <p className="text-xs md:text-sm text-white/60 mt-2 max-w-md mx-auto">Lebih hemat dengan paket lengkap. Pilih paket sesuai kebutuhan pendakianmu.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -505,7 +506,7 @@ function PackagesSection({ packages, onBookText }) {
                 <div className="absolute -top-2 right-4"><BadgeChip label={p.badge} /></div>
               )}
               <div className="text-[10px] tracking-widest text-gold uppercase">Paket</div>
-              <h3 className="font-serif text-xl md:text-2xl text-white font-bold mt-1">{p.name}</h3>
+              <h3 className="font-heading text-xl md:text-2xl text-white font-bold mt-1">{p.name}</h3>
               <p className="text-xs text-white/60 mt-1">{p.subtitle}</p>
               <div className="mt-4 space-y-1.5 flex-1">
                 {p.items.map((it, j) => (
@@ -517,7 +518,7 @@ function PackagesSection({ packages, onBookText }) {
               </div>
               <div className="mt-5 pt-4 border-t border-white/5 flex items-end justify-between">
                 <div>
-                  <div className="font-serif text-lg md:text-xl gold-text font-bold">{rupiah(p.price)}</div>
+                  <div className="font-heading text-lg md:text-xl gold-text font-bold">{rupiah(p.price)}</div>
                   <div className="text-[10px] text-white/40">/ hari</div>
                 </div>
                 <button onClick={() => onBookText(`Halo ID Hiking Rent, saya tertarik dengan ${p.name} (${rupiah(p.price)}/hari). Mohon info lebih lanjut.`)} className="px-3.5 py-2 rounded-full gold-gradient-bg text-black text-xs font-semibold">
@@ -564,7 +565,7 @@ function TripPlanner({ products, onBookText }) {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <Compass className="w-3 h-3" /> Trip Planner
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
             Pilih Gunungmu, <span className="gold-text">Kami Siapkan Alatnya</span>
           </h2>
           <p className="text-xs md:text-sm text-white/60 mt-2 max-w-md mx-auto">Rekomendasi peralatan otomatis berdasarkan destinasi pendakianmu.</p>
@@ -590,12 +591,12 @@ function TripPlanner({ products, onBookText }) {
             <div className="dark-glass rounded-2xl p-5 md:p-6">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <h3 className="font-serif text-xl md:text-2xl text-white font-bold">{selected.name}</h3>
+                  <h3 className="font-heading text-xl md:text-2xl text-white font-bold">{selected.name}</h3>
                   <p className="text-xs text-white/60 mt-1">{selected.elev} • Estimasi {selected.duration} • Level {selected.level}</p>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] tracking-widest text-white/50 uppercase">Estimasi</div>
-                  <div className="font-serif text-lg md:text-xl gold-text font-bold">{rupiah(total)}<span className="text-xs text-white/50">/hari</span></div>
+                  <div className="font-heading text-lg md:text-xl gold-text font-bold">{rupiah(total)}<span className="text-xs text-white/50">/hari</span></div>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -638,7 +639,7 @@ function Weather() {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <Cloud className="w-3 h-3" /> Cuaca Terkini
           </div>
-          <h2 className="font-serif text-2xl md:text-3xl text-white font-bold">Info <span className="gold-text">Cuaca Gunung</span></h2>
+          <h2 className="font-heading text-2xl md:text-3xl text-white font-bold">Info <span className="gold-text">Cuaca Gunung</span></h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4">
           {data.map(d => (
@@ -650,7 +651,7 @@ function Weather() {
                 </div>
                 <Sun className="w-6 h-6 text-gold" />
               </div>
-              <div className="font-serif text-3xl gold-text font-bold">{d.temp}</div>
+              <div className="font-heading text-3xl gold-text font-bold">{d.temp}</div>
               <div className="mt-3 space-y-1 text-[11px] text-white/70">
                 <div className="flex items-center gap-1.5"><Sunrise className="w-3 h-3 text-gold" /> Sunrise {d.sunrise}</div>
                 <div className="flex items-center gap-1.5"><Sunset className="w-3 h-3 text-gold" /> Sunset {d.sunset}</div>
@@ -680,7 +681,7 @@ function HowToRent() {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <Zap className="w-3 h-3" /> Cara Sewa
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
             <span className="gold-text">4 Langkah</span> Mudah Sewa Alat
           </h2>
         </div>
@@ -694,9 +695,9 @@ function HowToRent() {
               viewport={{ once: true }}
               className="dark-glass rounded-2xl p-5 md:p-6 relative overflow-hidden group hover:border-gold-30 transition"
             >
-              <div className="absolute top-4 right-4 font-serif text-4xl md:text-5xl gold-text opacity-30 font-bold">{s.n}</div>
+              <div className="absolute top-4 right-4 font-heading text-4xl md:text-5xl gold-text opacity-30 font-bold">{s.n}</div>
               <s.icon className="w-8 h-8 text-gold mb-4" strokeWidth={1.5} />
-              <h3 className="font-serif text-lg text-white font-bold">{s.title}</h3>
+              <h3 className="font-heading text-lg text-white font-bold">{s.title}</h3>
               <p className="text-xs md:text-sm text-white/60 mt-2 leading-relaxed">{s.desc}</p>
             </motion.div>
           ))}
@@ -722,7 +723,7 @@ function Reviews({ reviews }) {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <Star className="w-3 h-3" /> Testimoni
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
             Kata <span className="gold-text">Pendaki</span> Tentang Kami
           </h2>
         </div>
@@ -781,7 +782,7 @@ function StoreInfo({ settings }) {
             <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
               <MapPin className="w-3 h-3" /> Lokasi Toko
             </div>
-            <h3 className="font-serif text-xl md:text-2xl text-white font-bold">Kunjungi Toko Kami</h3>
+            <h3 className="font-heading text-xl md:text-2xl text-white font-bold">Kunjungi Toko Kami</h3>
             <div className="mt-5 space-y-3.5 text-sm">
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
@@ -826,7 +827,7 @@ function FAQSection({ faqs }) {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <Sparkles className="w-3 h-3" /> Bantuan
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
             Pertanyaan <span className="gold-text">Sering Ditanya</span>
           </h2>
         </div>
@@ -870,7 +871,7 @@ function CTA({ onBook }) {
             <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-3">
               <Mountain className="w-3 h-3" /> Ready to Adventure
             </div>
-            <h2 className="font-serif text-3xl md:text-5xl text-white font-bold leading-tight">
+            <h2 className="font-heading text-3xl md:text-5xl text-white font-bold leading-tight">
               SIAP MENDAKI <span className="gold-text">GUNUNG?</span>
             </h2>
             <p className="mt-4 text-sm md:text-base text-white/70 max-w-xl mx-auto">
@@ -898,7 +899,7 @@ function Footer() {
                 <Mountain className="w-5 h-5 text-black" strokeWidth={2.5} />
               </div>
               <div>
-                <div className="font-serif text-base gold-text font-bold">ID HIKING RENT</div>
+                <div className="font-heading text-base gold-text font-bold">ID HIKING RENT</div>
                 <div className="text-[9px] tracking-[0.3em] text-white/50">WONOSOBO</div>
               </div>
             </div>
@@ -961,7 +962,7 @@ function Gallery({ items }) {
           <div className="inline-flex items-center gap-2 text-[10px] tracking-widest text-gold uppercase mb-2">
             <ImagePlus className="w-3 h-3" /> Galeri
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl text-white font-bold">
+          <h2 className="font-heading text-2xl md:text-4xl text-white font-bold">
             <span className="gold-text">Momen</span> Pendakian
           </h2>
           <p className="text-xs md:text-sm text-white/60 mt-2 max-w-md mx-auto">Foto-foto summit, camping & alat rental kami. Nikmati momen bersama ID Hiking Rent.</p>
@@ -1130,9 +1131,9 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
               <img src={product.image} alt={product.name} className="w-24 h-24 rounded-xl object-cover border border-white/10" />
               <div className="flex-1 min-w-0">
                 <div className="text-[10px] tracking-widest text-gold uppercase">{product.category}</div>
-                <h3 className="font-serif text-lg text-white font-bold leading-tight">{product.name}</h3>
+                <h3 className="font-heading text-lg text-white font-bold leading-tight">{product.name}</h3>
                 <div className="text-xs text-white/50 mt-1">Ukuran: {product.size} • Sisa {product.stock}</div>
-                <div className="mt-1.5 font-serif text-lg gold-text font-bold">{rupiah(product.price)}<span className="text-xs text-white/50">/hari</span></div>
+                <div className="mt-1.5 font-heading text-lg gold-text font-bold">{rupiah(product.price)}<span className="text-xs text-white/50">/hari</span></div>
               </div>
             </div>
             {product.description && (
@@ -1167,7 +1168,7 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
                     <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:border-gold transition">
                       <Minus className="w-4 h-4" />
                     </button>
-                    <div className="flex-1 text-center font-serif text-2xl gold-text font-bold">{qty}</div>
+                    <div className="flex-1 text-center font-heading text-2xl gold-text font-bold">{qty}</div>
                     <button onClick={() => setQty(q => Math.min(availability?.remaining ?? product.stock, q + 1))} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:border-gold transition">
                       <Plus className="w-4 h-4" />
                     </button>
@@ -1199,7 +1200,7 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-sm text-white font-semibold">Total Harga</span>
-                    <span className="font-serif text-2xl gold-text font-bold">{rupiah(total)}</span>
+                    <span className="font-heading text-2xl gold-text font-bold">{rupiah(total)}</span>
                   </div>
                 </div>
 
@@ -1262,7 +1263,7 @@ function BookingSheet({ product, onClose, onSubmit, allProducts }) {
                   </div>
                   <div className="border-t border-white/10 pt-2.5 flex justify-between items-center">
                     <span className="text-white font-semibold">Total</span>
-                    <span className="font-serif text-2xl gold-text font-bold">{rupiah(total)}</span>
+                    <span className="font-heading text-2xl gold-text font-bold">{rupiah(total)}</span>
                   </div>
                 </div>
 

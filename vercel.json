@@ -1,0 +1,28 @@
+{
+  "buildCommand": "yarn build",
+  "devCommand": "yarn dev",
+  "installCommand": "yarn install",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json" }
+      ]
+    },
+    {
+      "source": "/icon.svg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}

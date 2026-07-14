@@ -1,4 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap');
+/*
+ * ID HIKING RENT WONOSOBO - Design System
+ * ---------------------------------------
+ * Primary heading font: Archivo Black (closest FREE match to "Nexa Black Bold")
+ * To swap to actual Nexa Black:
+ *   1. Place NexaBlack.woff2 in /app/public/fonts/
+ *   2. Uncomment the @font-face block below
+ *   3. Set --font-heading: 'Nexa Black' in :root
+ */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/*
+@font-face {
+  font-family: 'Nexa Black';
+  src: url('/fonts/NexaBlack.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+*/
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +25,8 @@
 
 @layer base {
   :root {
+    --font-heading: 'Archivo Black', 'Nexa Black', 'Helvetica Neue', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     --background: 0 0% 2%;
     --foreground: 0 0% 98%;
     --card: 0 0% 4%;
@@ -29,9 +50,7 @@
   }
 }
 
-* {
-  border-color: hsl(var(--border));
-}
+* { border-color: hsl(var(--border)); }
 
 html {
   scroll-behavior: smooth;
@@ -42,32 +61,45 @@ body {
   margin: 0;
   background: #050505;
   color: #fff;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body);
+  font-feature-settings: 'ss01', 'ss02';
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-.font-serif {
-  font-family: 'Playfair Display', serif;
+.font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+  font-weight: 900;
 }
 
-/* Gold gradient text */
+/* Gold gradient text with subtle metallic effect */
 .gold-text {
   background: linear-gradient(135deg, #f4d47c 0%, #d4af37 40%, #b8860b 70%, #f4d47c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% 200%;
-  animation: shimmer 4s ease-in-out infinite;
+  animation: shimmer 5s ease-in-out infinite;
+}
+
+/* Premium heading with metallic glow */
+.hero-title {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 40px rgba(212, 175, 55, 0.25), 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: -0.01em;
 }
 
 @keyframes shimmer {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-}
-
-.gold-border {
-  position: relative;
 }
 
 .gold-gradient-bg {
@@ -81,61 +113,41 @@ body {
   border: 1px solid rgba(212, 175, 55, 0.12);
 }
 
-.gold-glow {
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3), 0 0 80px rgba(212, 175, 55, 0.1);
-}
-
-.gold-glow-sm {
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
-}
+.gold-glow { box-shadow: 0 0 40px rgba(212, 175, 55, 0.3), 0 0 80px rgba(212, 175, 55, 0.1); }
+.gold-glow-sm { box-shadow: 0 0 20px rgba(212, 175, 55, 0.25); }
 
 @keyframes pulse-gold {
   0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.2); }
   50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6), 0 0 100px rgba(212, 175, 55, 0.3); }
 }
-
-.pulse-gold {
-  animation: pulse-gold 2.5s ease-in-out infinite;
-}
+.pulse-gold { animation: pulse-gold 2.5s ease-in-out infinite; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
 }
-
-.float-anim {
-  animation: float 3s ease-in-out infinite;
-}
+.float-anim { animation: float 3s ease-in-out infinite; }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-.fade-in-up {
-  animation: fadeInUp 0.7s ease-out forwards;
-}
+.fade-in-up { animation: fadeInUp 0.7s ease-out forwards; }
 
 @keyframes fog-drift {
   0% { transform: translateX(-100%); opacity: 0; }
   50% { opacity: 0.4; }
   100% { transform: translateX(100%); opacity: 0; }
 }
+.fog-layer { animation: fog-drift 20s linear infinite; }
 
-.fog-layer {
-  animation: fog-drift 20s linear infinite;
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #d4af37, #b8860b); border-radius: 3px; }
 
-/* Hide scrollbar for horizontal scrollers */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Loading screen logo */
 .logo-mark {
   background: linear-gradient(135deg, #f4d47c 0%, #d4af37 50%, #b8860b 100%);
   -webkit-background-clip: text;
@@ -144,7 +156,6 @@ body {
   filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.5));
 }
 
-/* Product card hover */
 .product-card {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -154,29 +165,31 @@ body {
   box-shadow: 0 20px 40px -20px rgba(212, 175, 55, 0.3);
 }
 
-/* Sticky bottom action bar for mobile */
 .sticky-cta {
   background: linear-gradient(180deg, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.98) 40%);
   backdrop-filter: blur(20px);
 }
 
-/* Marquee */
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
 }
-.marquee-track {
-  animation: marquee 30s linear infinite;
-}
+.marquee-track { animation: marquee 30s linear infinite; }
 
-/* Custom checkbox for gold theme */
-.gold-radio:checked {
-  background: #d4af37;
-  border-color: #d4af37;
-}
-
-/* Utility */
 .text-gold { color: #d4af37; }
 .bg-gold { background: #d4af37; }
 .border-gold { border-color: #d4af37; }
 .border-gold-30 { border-color: rgba(212, 175, 55, 0.3); }
+
+/* Print styles for invoice */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000 !important; background: #fff !important; }
+}
+
+/* Zoom effect for product images */
+.zoom-img {
+  transition: transform 0.5s ease;
+}
+.zoom-img:hover { transform: scale(1.08); }

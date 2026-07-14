@@ -178,6 +178,67 @@ backend:
           agent: "testing"
           comment: "✅ All tests passed. Verified: GET /api/admin/orders returns {items: [...]} with all orders, PUT /api/admin/orders/{id} with {status: 'CONFIRMED'} successfully updates order status. GET /api/admin/settings returns {settings: {...}} with all store info, PUT /api/admin/settings with {hours: '08:00-20:00'} successfully updates settings. All operations require x-admin-token header."
 
+  - task: "Product slug lookup (GET /api/products/slug/:slug)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Auto-generated slug from product name (e.g. 'carrier-consina-60l'). Returns product + related. 404 if not found."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed (11/11). Verified: GET /api/products/slug/carrier-consina-60l returns 200 with product (slug='carrier-consina-60l', images array with 1+ items, pricingTiers array with 6 entries) and related array. GET /api/products/slug/does-not-exist returns 404 with error field. GET /api/products/slug/tenda-dome-eiger-4p returns 200 with correct product. All pricingTiers have correct structure {days: number, price: number}."
+
+  - task: "Auto-slug + pricingTiers + images backfill"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "On each request, backfills missing slug, images[], pricingTiers[] on existing products. New products via admin also get auto-slug."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed (6/6). Verified: GET /api/products returns 22 products. ALL products have slug (non-empty string), images array with at least 1 item, and pricingTiers array with at least 3 entries. Each pricingTiers entry has correct structure {days: number, price: number}. Auto-backfill working correctly for all existing products."
+
+  - task: "Admin notifications (list/read-all/delete)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New order creates notification in 'notifications' collection. GET /api/admin/notifications lists with unread count. POST /api/admin/notifications/read-all marks read. DELETE removes."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed (11/11). Verified: GET /api/admin/notifications returns {items: [...], unread: N} with correct structure. POST /api/admin/notifications/read-all returns {ok: true} and sets unread count to 0. DELETE /api/admin/notifications/{id} returns {ok: true} and removes notification from list. Unauthorized access (no token) returns 401. All admin routes properly protected."
+
+  - task: "Order creates notification + optional Fonnte WA"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "POST /api/orders now creates a notification record and (if FONNTE_TOKEN env is set) sends WA notification to admin. If not set, skipped silently."
+        - working: true
+          agent: "testing"
+          comment: "✅ All tests passed (8/8). Verified: POST /api/orders creates order and returns {order: {...}, notification: {...}}. Notification is {skipped: true} when FONNTE_TOKEN not set (expected behavior). Notification record is created in DB with type='NEW_ORDER', title contains product name, and unread count increases. GET /api/admin/notifications confirms notification exists with correct structure. Order creation + notification flow working correctly."
+
+
   - task: "Product availability check (GET /api/products/:id/availability)"
     implemented: true
     working: true
@@ -373,7 +434,28 @@ agent_communication:
 
     - agent: "main"
       message: |
-        NEW ADMIN & AVAILABILITY ENDPOINTS ADDED. Please test these next:
+        NEW ENDPOINTS ADDED (v3):
+        1) GET /api/products/slug/:slug — public slug lookup for SEO product pages
+        2) Products now include: slug (auto-generated from name), images[] (array), pricingTiers[] ({days, price})
+        3) Auto-backfill: existing products without slug/images/pricingTiers get them on next GET
+        4) POST /api/orders now:
+           - Creates a notification entry in 'notifications' collection
+           - Attempts to send WhatsApp notification via Fonnte if FONNTE_TOKEN env is set
+        5) GET /api/admin/notifications — list admin notifications with unread count
+        6) POST /api/admin/notifications/read-all — mark all as read
+        7) DELETE /api/admin/notifications/:id
+        8) Admin POST/PUT products now auto-slug from name, and pricingTiers-aware
+        
+        Please test:
+        1) GET /api/products/slug/carrier-consina-60l → returns product & related
+        2) GET /api/products/slug/does-not-exist → 404
+        3) Verify auto-slug on backfill: fetch products, all should have slug field
+        4) Verify products have pricingTiers array with entries { days, price }
+        5) POST /api/admin/products with pricingTiers explicit → stored correctly
+        6) POST /api/orders → verify notification is created in DB
+        7) GET /api/admin/notifications → returns items[] and unread count
+        8) POST /api/admin/notifications/read-all → unread becomes 0
+        9) DELETE /api/admin/notifications/:id → item removed
         Auth: POST /api/admin/login with { password: "admin123" } → { ok:true, token }
         All admin CRUD endpoints require header 'x-admin-token: admin123'.
         
@@ -492,3 +574,56 @@ agent_communication:
         All admin endpoints properly secured with x-admin-token header.
         Availability calculation correctly handles date overlaps and booking quantities.
         Backend is production-ready.
+    - agent: "testing"
+      message: |
+        ✅ V3 NEW ENDPOINTS TESTING COMPLETE - ALL TESTS PASSED (49/49)
+        
+        Tested all NEW v3 endpoints successfully:
+        
+        1. Product Slug Lookup - ✅ Working (11/11 tests)
+           - GET /api/products/slug/carrier-consina-60l → 200 with product + related
+           - product.slug = 'carrier-consina-60l'
+           - product has images array (1+ items) and pricingTiers array (6 entries)
+           - pricingTiers have correct structure {days: number, price: number}
+           - GET /api/products/slug/does-not-exist → 404 with error field
+           - GET /api/products/slug/tenda-dome-eiger-4p → 200 with correct product
+        
+        2. Auto-Backfill - ✅ Working (6/6 tests)
+           - GET /api/products returns 22 products
+           - ALL products have slug (non-empty string)
+           - ALL products have images array (1+ items)
+           - ALL products have pricingTiers array (3+ entries)
+           - pricingTiers structure verified: {days: number, price: number}
+        
+        3. Order Creates Notification - ✅ Working (8/8 tests)
+           - POST /api/orders returns {order: {...}, notification: {...}}
+           - Notification is {skipped: true} when FONNTE_TOKEN not set (expected)
+           - Notification record created in DB with type='NEW_ORDER'
+           - GET /api/admin/notifications confirms notification exists
+           - Notification title contains product name
+           - unread count increases after order creation
+        
+        4. Notifications Management - ✅ Working (11/11 tests)
+           - GET /api/admin/notifications → {items: [...], unread: N}
+           - POST /api/admin/notifications/read-all → {ok: true}, unread becomes 0
+           - DELETE /api/admin/notifications/{id} → {ok: true}, item removed
+           - Unauthorized access (no token) → 401
+           - All admin routes properly protected
+        
+        5. Admin Product with pricingTiers - ✅ Working (13/13 tests)
+           - POST /api/admin/products with explicit pricingTiers
+           - Auto-slug generated: 'slug-test-item-abc'
+           - images array stored correctly (2 URLs)
+           - pricingTiers array stored correctly (3 tiers)
+           - GET /api/products/slug/slug-test-item-abc retrieves created product
+           - DELETE cleanup successful
+        
+        ALL 49 V3 TESTS PASSED. NO CRITICAL ISSUES FOUND.
+        All new v3 endpoints working correctly:
+        - Slug lookup for SEO-friendly URLs
+        - Auto-backfill ensures data consistency
+        - Order notifications for admin dashboard
+        - Notifications management (list/read/delete)
+        - Admin product creation with pricingTiers
+        
+        Backend v3 features are production-ready.
