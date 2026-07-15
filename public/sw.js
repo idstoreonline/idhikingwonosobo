@@ -1,4 +1,4 @@
-const CACHE = 'idhr-v1';
+const CACHE = 'idhr-v2';
 const ASSETS = ['/', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (e) => {
