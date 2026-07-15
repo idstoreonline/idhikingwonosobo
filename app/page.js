@@ -92,7 +92,7 @@ function LoadingScreen({ onDone }) {
       >
        <div className="relative flex items-center justify-center">
   <Image
-    src="/logopng.png"
+    src="/logofinal.webp"
     alt="ID Hiking Rent Wonosobo"
     width={320}
     height={160}
@@ -141,7 +141,7 @@ function TopNav({ onBook }) {
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
         <a href="#top" className="flex items-center">
           <Image
-            src="/logopng.png"
+            src="/logofinal.webp"
             alt="ID Hiking Rent Wonosobo"
             width={220}
             height={70}
@@ -953,7 +953,7 @@ function Footer() {
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-3">
               <Image
-                src="/logopng.png"
+                src="/logofinal.webp"
                 alt="ID Hiking Rent Wonosobo"
                 width={360}
                 height={140}
