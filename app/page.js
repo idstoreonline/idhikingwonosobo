@@ -128,17 +128,18 @@ function TopNav({ onBook }) {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
- return (
+return (
   <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 dark-glass border-b border-white/5' : 'py-3'}`}>
     <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
+
       <a href="#top" className="flex items-center">
         <Image
           src="/logopng.png"
           alt="ID Hiking Rent Wonosobo"
-          width={150}
-          height={44}
+          width={220}
+          height={70}
           priority
-          className="w-[150px] md:w-[44px] h-auto object-contain"
+          className="w-[115px] sm:w-[130px] md:w-[180px] lg:w-[220px] h-auto object-contain"
         />
       </a>
         <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
