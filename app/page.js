@@ -123,33 +123,55 @@ function LoadingScreen({ onDone }) {
 /* ===================== TOP NAV ===================== */
 function TopNav({ onBook }) {
   const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
-return (
-  <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 dark-glass border-b border-white/5' : 'py-3'}`}>
-    <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
 
-      <a href="#top" className="flex items-center">
-        <Image
-          src="/logopng.png"
-          alt="ID Hiking Rent Wonosobo"
-          width={220}
-          height={70}
-          priority
-          className="w-[115px] sm:w-[130px] md:w-[180px] lg:w-[220px] h-auto object-contain"
-        />
-      </a>
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+        scrolled
+          ? "py-1 dark-glass border-b border-white/5"
+          : "py-1.5"
+      }`}
+    >
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
+        <a href="#top" className="flex items-center">
+          <Image
+            src="/logopng.png"
+            alt="ID Hiking Rent Wonosobo"
+            width={220}
+            height={70}
+            priority
+            className="w-[105px] sm:w-[120px] md:w-[165px] lg:w-[190px] h-auto object-contain"
+          />
+        </a>
+
         <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
-          <a href="#produk" className="hover:text-gold transition">Rental</a>
-          <a href="#paket" className="hover:text-gold transition">Paket</a>
-          <a href="#trip" className="hover:text-gold transition">Trip Planner</a>
-          <a href="#review" className="hover:text-gold transition">Review</a>
-          <a href="#faq" className="hover:text-gold transition">FAQ</a>
+          <a href="#produk" className="hover:text-gold transition">
+            Rental
+          </a>
+          <a href="#paket" className="hover:text-gold transition">
+            Paket
+          </a>
+          <a href="#trip" className="hover:text-gold transition">
+            Trip Planner
+          </a>
+          <a href="#review" className="hover:text-gold transition">
+            Review
+          </a>
+          <a href="#faq" className="hover:text-gold transition">
+            FAQ
+          </a>
         </nav>
-        <button onClick={onBook} className="text-xs md:text-sm px-3.5 md:px-5 py-2 md:py-2.5 rounded-full gold-gradient-bg text-black font-semibold gold-glow-sm hover:scale-105 transition">
+
+        <button
+          onClick={onBook}
+          className="text-xs md:text-sm px-3.5 md:px-5 py-2 rounded-full gold-gradient-bg text-black font-semibold gold-glow-sm hover:scale-105 transition"
+        >
           Booking
         </button>
       </div>
