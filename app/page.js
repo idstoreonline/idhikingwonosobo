@@ -92,7 +92,7 @@ function LoadingScreen({ onDone }) {
       >
        <div className="relative flex items-center justify-center">
   <Image
-    src="/image.webp"
+    src="/logopng.png"
     alt="ID Hiking Rent Wonosobo"
     width={320}
     height={160}
@@ -110,7 +110,7 @@ function LoadingScreen({ onDone }) {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="mt-6 text-xs md:text-sm text-white/70 max-w-xs text-center"
         >
-          Partner Petualanganmu di Gunung Prau, Sindoro & Dieng.
+          Partner Petualanganmu di Gunung Prau, Sindoro, Sumbing, Dieng & Lainnya.
         </motion.p>
         <div className="mt-8 h-[2px] w-40 bg-white/10 overflow-hidden rounded-full">
           <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }} className="h-full w-1/2 gold-gradient-bg" />
