@@ -1,13 +1,35 @@
 export default async function sitemap() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://05dd18aa-0ad7-490e-ad6d-50a75fbbc0ac.preview.emergentagent.com';
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://idhikingwonosobo.com";
+
   const now = new Date();
+
+  // Ambil semua produk
+  let products = [];
+  try {
+    const res = await fetch(`${base}/api/products`, {
+      cache: "no-store",
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      products = (data.products || []).map((p) => ({
+        url: `${base}/produk/${p.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.8,
+      }));
+    }
+  } catch (e) {}
+
   return [
-    { url: base, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
-    { url: `${base}#produk`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${base}#paket`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
-    { url: `${base}#trip`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${base}#galeri`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${base}#review`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${base}#faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    {
+      url: base,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 1,
+    },
+
+    ...products,
   ];
 }
