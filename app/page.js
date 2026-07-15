@@ -934,7 +934,7 @@ function Footer() {
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-3">
               <Image
-                src="/image.webp"
+                src="/logopng.png"
                 alt="ID Hiking Rent Wonosobo"
                 width={180}
                 height={70}
