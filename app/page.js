@@ -141,6 +141,7 @@ function TopNav({ onBook }) {
           className="w-[140px] md:w-[170px] h-auto object-contain"
         />
       </a>
+        </div>
           </div>
           <div className="leading-tight">
             <div className="font-heading text-sm md:text-base gold-text font-semibold">ID HIKING RENT</div>
