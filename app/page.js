@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import {
+import Image from "next/image";
   Mountain, Star, ShoppingBag, MessageCircle, Search, Filter, ArrowRight, X,
   ChevronLeft, ChevronRight, ChevronDown, Plus, Minus, MapPin, Clock, CreditCard,
   Truck, Sparkles, Award, Flame, Shield, Zap, PackageCheck, Compass, Tent,
@@ -894,14 +894,16 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-yellow-500 via-amber-600 to-yellow-800 flex items-center justify-center gold-glow-sm">
-                <Mountain className="w-5 h-5 text-black" strokeWidth={2.5} />
-              </div>
-              <div>
-                <div className="font-heading text-base gold-text font-bold">ID HIKING RENT</div>
-                <div className="text-[9px] tracking-[0.3em] text-white/50">WONOSOBO</div>
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <Image
+                src="/image.webp"
+                alt="ID Hiking Rent Wonosobo"
+                width={180}
+                height={70}
+                className="w-[180px] h-auto object-contain"
+                priority
+              />
+            </div>
             </div>
             <p className="text-xs md:text-sm text-white/60 max-w-sm leading-relaxed">
               Rental alat hiking & camping premium di Wonosobo. Melayani pendaki menuju Gunung Prau, Sindoro, Sumbing, Bismo & Dieng Plateau sejak 2019.
