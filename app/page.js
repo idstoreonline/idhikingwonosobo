@@ -942,7 +942,7 @@ function Footer() {
                 priority
               />
             </div>
-            </div>
+                  
             <p className="text-xs md:text-sm text-white/60 max-w-sm leading-relaxed">
               Rental alat hiking & camping premium di Wonosobo. Melayani pendaki menuju Gunung Prau, Sindoro, Sumbing, Bismo & Dieng Plateau sejak 2019.
             </p>
