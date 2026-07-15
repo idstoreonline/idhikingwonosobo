@@ -138,7 +138,7 @@ function TopNav({ onBook }) {
           width={150}
           height={44}
           priority
-          className="w-[100px] md:w-[34px] h-auto object-contain"
+          className="w-[150px] md:w-[44px] h-auto object-contain"
         />
       </a>
         <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
