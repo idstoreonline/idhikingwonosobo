@@ -936,8 +936,8 @@ function Footer() {
               <Image
                 src="/logopng.png"
                 alt="ID Hiking Rent Wonosobo"
-                width={180}
-                height={70}
+                width={360}
+                height={140}
                 className="w-[180px] h-auto object-contain"
                 priority
               />
