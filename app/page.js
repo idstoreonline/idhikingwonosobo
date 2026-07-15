@@ -90,19 +90,16 @@ function LoadingScreen({ onDone }) {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="relative z-10 flex flex-col items-center"
       >
-        <div className="relative">
-          <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-yellow-400 to-amber-700 opacity-40 rounded-full" />
-          <Mountain className="relative w-20 h-20 text-transparent" style={{ stroke: 'url(#g1)' }} strokeWidth={1.4} />
-          <svg width="0" height="0">
-            <defs>
-              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#f4d47c" />
-                <stop offset="50%" stopColor="#d4af37" />
-                <stop offset="100%" stopColor="#b8860b" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+       <div className="relative flex items-center justify-center">
+  <Image
+    src="/image.webp"
+    alt="ID Hiking Rent Wonosobo"
+    width={320}
+    height={160}
+    priority
+    className="w-[280px] md:w-[320px] h-auto drop-shadow-[0_0_25px_rgba(212,175,55,0.45)]"
+  />
+</div>
         <h1 className="font-heading text-2xl md:text-4xl mt-6 tracking-widest gold-text">
           ID HIKING RENT
         </h1>
