@@ -135,8 +135,8 @@ function TopNav({ onBook }) {
         <Image
           src="/logopng.png"
           alt="ID Hiking Rent Wonosobo"
-          width={100}
-          height={34}
+          width={150}
+          height={44}
           priority
           className="w-[100px] md:w-[34px] h-auto object-contain"
         />
