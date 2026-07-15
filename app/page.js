@@ -135,10 +135,10 @@ function TopNav({ onBook }) {
         <Image
           src="/logopng.png"
           alt="ID Hiking Rent Wonosobo"
-          width={80}
-          height={24}
+          width={100}
+          height={34}
           priority
-          className="w-[10px] md:w-[60px] h-auto object-contain"
+          className="w-[100px] md:w-[34px] h-auto object-contain"
         />
       </a>
         <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
