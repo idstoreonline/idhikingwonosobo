@@ -40,8 +40,8 @@ export const metadata = {
     title: 'ID Hiking Rent',
   },
   icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/icon.svg' }],
+    icon: [{ url: '/sampel png.webp', type: 'image/svg+xml' }],
+    apple: [{ url: '/sampel png.webp' }],
   },
 };
 
@@ -59,7 +59,7 @@ export default function RootLayout({ children }) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'ID Hiking Rent Wonosobo',
-    image: `${BASE}/icon.svg`,
+    image: `${BASE}/sampel png.webp`,
     '@id': BASE,
     telephone: '+6287777728727',
     priceRange: 'Rp',
@@ -85,7 +85,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/sampel png.webp" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
