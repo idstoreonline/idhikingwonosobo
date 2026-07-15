@@ -133,7 +133,7 @@ function TopNav({ onBook }) {
     <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
       <a href="#top" className="flex items-center">
         <Image
-          src="/image.webp"
+          src="/logopng.png"
           alt="ID Hiking Rent Wonosobo"
           width={170}
           height={60}
@@ -141,13 +141,6 @@ function TopNav({ onBook }) {
           className="w-[140px] md:w-[170px] h-auto object-contain"
         />
       </a>
-        </div>
-          </div>
-          <div className="leading-tight">
-            <div className="font-heading text-sm md:text-base gold-text font-semibold">ID HIKING RENT</div>
-            <div className="text-[8px] md:text-[10px] tracking-[0.3em] text-white/50">WONOSOBO</div>
-          </div>
-        </a>
         <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
           <a href="#produk" className="hover:text-gold transition">Rental</a>
           <a href="#paket" className="hover:text-gold transition">Paket</a>
