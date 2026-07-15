@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://05dd18aa-0ad7-490e-ad6d-50a75fbbc0ac.preview.emergentagent.com/sitemap.xml
+Sitemap: https://idhikingwonosobo.com/sitemap.xml
