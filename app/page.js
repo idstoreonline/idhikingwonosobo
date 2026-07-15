@@ -101,9 +101,9 @@ function LoadingScreen({ onDone }) {
   />
 </div>
         <h1 className="font-heading text-2xl md:text-4xl mt-6 tracking-widest gold-text">
-          ID HIKING RENT
+         Menyediakan Alat Hiking
         </h1>
-        <p className="text-[10px] md:text-xs tracking-[0.4em] text-white/60 mt-1">WONOSOBO</p>
+        <p className="text-[10px] md:text-xs tracking-[0.4em] text-white/60 mt-1">Terlengkap</p>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -128,14 +128,19 @@ function TopNav({ onBook }) {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-  return (
-    <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 dark-glass border-b border-white/5' : 'py-3'}`}>
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
-        <a href="#top" className="flex items-center gap-2">
-          <div className="relative">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 via-amber-600 to-yellow-800 flex items-center justify-center gold-glow-sm">
-              <Mountain className="w-4 h-4 text-black" strokeWidth={2.5} />
-            </div>
+ return (
+  <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'py-2 dark-glass border-b border-white/5' : 'py-3'}`}>
+    <div className="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6">
+      <a href="#top" className="flex items-center">
+        <Image
+          src="/image.webp"
+          alt="ID Hiking Rent Wonosobo"
+          width={170}
+          height={60}
+          priority
+          className="w-[140px] md:w-[170px] h-auto object-contain"
+        />
+      </a>
           </div>
           <div className="leading-tight">
             <div className="font-heading text-sm md:text-base gold-text font-semibold">ID HIKING RENT</div>
